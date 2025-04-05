@@ -786,8 +786,30 @@ def main():
                         st.markdown("</div>", unsafe_allow_html=True)
                         
                     except Exception as e:
-                        st.error(f"Error generating AI analysis: {str(e)}")
-                        st.exception(e)
+                        error_msg = str(e)
+                        st.error(f"Error generating AI analysis: {error_msg}")
+                        
+                        # Provide more helpful guidance based on the error
+                        if "API key" in error_msg or "CrewAI not available" in error_msg:
+                            st.warning("""
+                            ### OpenAI API Key Required
+                            
+                            To use the AI analysis feature, you need to set up an OpenAI API key:
+                            
+                            **For local deployment:**
+                            1. Create a `.env` file in the project root with `OPENAI_API_KEY=your_key_here`
+                            2. Restart the app
+                            
+                            **For Streamlit Cloud:**
+                            1. Go to your app settings in the Streamlit Cloud dashboard
+                            2. Add `OPENAI_API_KEY` as a secret with your API key as the value
+                            3. Redeploy the app
+                            
+                            You can still use the forecasting features without an API key.
+                            """)
+                        else:
+                            # For other errors, show the exception details
+                            st.exception(e)
             
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")

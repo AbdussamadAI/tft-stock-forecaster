@@ -61,16 +61,18 @@ class TFTStockAnalysisLLM:
             bool: True if the API key is valid, False otherwise.
         """
         if not self.api_key:
-            logging.warning("No OpenAI API key provided.")
+            logging.warning("No OpenAI API key provided. Set OPENAI_API_KEY in Streamlit Cloud settings.")
             return False
         
-        # Basic validation - check if it starts with "sk-" and has sufficient length
-        if not self.api_key.startswith("sk-") or len(self.api_key) < 20:
-            logging.warning("Invalid OpenAI API key format.")
+        # For Streamlit Cloud, we'll be more lenient with validation
+        # Just check if the key has a reasonable length
+        if len(self.api_key) < 10:
+            logging.warning("API key seems too short.")
             return False
         
-        # If we get here, the key format is valid
-        masked_key = f"{self.api_key[:4]}...{self.api_key[-5:]}"
+        # If we get here, assume the key might be valid
+        # Mask the key for logging
+        masked_key = f"{self.api_key[:3]}...{self.api_key[-3:]}" if len(self.api_key) > 6 else "***masked***"
         logging.info(f"Using API key: {masked_key}")
         return True
     
