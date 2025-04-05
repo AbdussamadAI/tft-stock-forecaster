@@ -1,0 +1,5 @@
+libgl1-mesa-glx
+libegl1-mesa
+libxrender1
+libfontconfig1
+libdbus-1-3
