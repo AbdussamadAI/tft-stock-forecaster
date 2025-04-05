@@ -1,7 +1,9 @@
-streamlit==1.31.0
-yfinance==0.2.35
-pandas==2.1.4
-numpy==1.26.3
-plotly==5.18.0
-torch==2.1.2
-scikit-learn==1.4.0
+streamlit>=1.28.0
+yfinance>=0.2.28
+pandas>=1.5.3,<2.2.0
+numpy>=1.24.0,<2.0.0
+plotly>=5.14.0
+scikit-learn>=1.0.0
+
+# Use CPU-only version of PyTorch to reduce deployment size
+torch>=2.0.0,<3.0.0 --index-url https://download.pytorch.org/whl/cpu

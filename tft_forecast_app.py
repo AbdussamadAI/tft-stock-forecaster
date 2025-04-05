@@ -20,8 +20,9 @@ from torch.utils.data import Dataset, DataLoader
 import time
 from sklearn.preprocessing import StandardScaler
 
-# For deployment, we don't need to add the src directory
-# since we're using the simplified TFT model directly in this file
+# For Streamlit Cloud deployment
+# We're using the simplified TFT model directly in this file
+# No external dependencies on src directory
 
 # Always use the simplified TFT model for this app
 # This ensures the app works even without the actual TFT implementation
