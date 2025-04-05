@@ -19,6 +19,13 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import time
 from sklearn.preprocessing import StandardScaler
+from dotenv import load_dotenv
+
+# Import the TFT Stock Analysis LLM module
+from tft_analysis_llm import TFTStockAnalysisLLM
+
+# Load environment variables from .env file
+load_dotenv()
 
 # For Streamlit Cloud deployment
 # We're using the simplified TFT model directly in this file
@@ -668,6 +675,13 @@ def main():
             mae = np.random.uniform(0.1, 0.5)
             mape = np.random.uniform(1, 5)
             
+            # Store metrics in a dictionary for the LLM analysis
+            model_metrics = {
+                'MSE': f"{mse:.4f}",
+                'MAE': f"{mae:.4f}",
+                'MAPE': f"{mape:.2f}%"
+            }
+            
             metrics_col1, metrics_col2, metrics_col3 = st.columns(3)
             
             with metrics_col1:
@@ -706,6 +720,9 @@ def main():
             sorted_features = [features[i] for i in sorted_idx]
             sorted_importance = feature_importance[sorted_idx]
             
+            # Create a dictionary of feature importance for the LLM analysis
+            feature_importance_dict = {sorted_features[i]: f"{sorted_importance[i]:.4f}" for i in range(len(sorted_features))}
+            
             # Create feature importance plot
             fig_importance = go.Figure()
             
@@ -726,6 +743,47 @@ def main():
             )
             
             st.plotly_chart(fig_importance, use_container_width=True)
+            
+            # AI Stock Analysis Section
+            st.markdown("<h2 class='sub-header'>AI Stock Analysis</h2>", unsafe_allow_html=True)
+            
+            # Information about the AI analysis
+            st.markdown("""
+            <div class='info-box'>
+                <p>This analysis is generated using an AI system that simulates a team of financial experts:</p>
+                <ul>
+                    <li><strong>Financial Analyst:</strong> Analyzes historical data and technical indicators</li>
+                    <li><strong>Market Researcher:</strong> Examines market trends and news</li>
+                    <li><strong>TFT Model Interpreter:</strong> Explains the model's predictions and feature importance</li>
+                    <li><strong>Investment Advisor:</strong> Provides recommendations based on all analyses</li>
+                </ul>
+                <p><em>Note: This requires an OpenAI API key to be set in your environment variables.</em></p>
+            </div>
+            """, unsafe_allow_html=True)
+            
+            # Button to generate AI analysis
+            if st.button("Generate AI Analysis"):
+                with st.spinner("Generating AI analysis... This may take a minute..."):
+                    try:
+                        # Initialize the LLM analyzer
+                        llm_analyzer = TFTStockAnalysisLLM()
+                        
+                        # Generate the analysis
+                        analysis = llm_analyzer.analyze_stock(
+                            symbol=symbol,
+                            forecast_data=prediction_df,
+                            model_metrics=model_metrics,
+                            feature_importance=feature_importance_dict
+                        )
+                        
+                        # Display the analysis
+                        st.markdown("<div class='prediction-box'>", unsafe_allow_html=True)
+                        st.markdown(analysis)
+                        st.markdown("</div>", unsafe_allow_html=True)
+                        
+                    except Exception as e:
+                        st.error(f"Error generating AI analysis: {str(e)}")
+                        st.exception(e)
             
         except Exception as e:
             st.error(f"An error occurred: {str(e)}")
