@@ -6,15 +6,20 @@ It uses CrewAI to simulate a team of financial experts analyzing stock data.
 """
 
 import os
-from dotenv import load_dotenv
 from datetime import datetime
 import logging
+
+# Try to import dotenv, but continue if it's not available
+try:
+    from dotenv import load_dotenv
+    load_dotenv()  # Load environment variables from .env file
+except ImportError:
+    logging.warning("Warning: python-dotenv not installed. Environment variables must be set manually.")
 
 # Configure logging
 logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(message)s')
 
-# Load environment variables from .env file
-load_dotenv()
+# Environment variables already loaded in the try-except block above
 
 class TFTStockAnalysisLLM:
     """

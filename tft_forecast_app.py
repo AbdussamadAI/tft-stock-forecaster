@@ -19,13 +19,17 @@ import torch.optim as optim
 from torch.utils.data import Dataset, DataLoader
 import time
 from sklearn.preprocessing import StandardScaler
-from dotenv import load_dotenv
+# Try to import dotenv, but continue if it's not available
+try:
+    from dotenv import load_dotenv
+    load_dotenv()  # Load environment variables from .env file
+except ImportError:
+    print("Warning: python-dotenv not installed. Environment variables must be set manually.")
 
 # Import the TFT Stock Analysis LLM module
 from tft_analysis_llm import TFTStockAnalysisLLM
 
-# Load environment variables from .env file
-load_dotenv()
+# Environment variables already loaded in the try-except block above
 
 # For Streamlit Cloud deployment
 # We're using the simplified TFT model directly in this file
