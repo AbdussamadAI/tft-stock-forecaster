@@ -6,7 +6,6 @@ It uses CrewAI to simulate a team of financial experts analyzing stock data.
 """
 
 import os
-from datetime import datetime
 import logging
 
 # Try to import dotenv, but continue if it's not available
@@ -36,22 +35,12 @@ class TFTStockAnalysisLLM:
         """
         # Set API key if provided, otherwise use environment variable
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
-        self.use_llm = self._validate_api_key()
         
-        # Only create agents if we have a valid API key
-        if self.use_llm:
-            try:
-                # Import CrewAI here to avoid errors if not using LLM
-                from crewai import Agent, Crew, Process
-                
-                # Create the specialized agents
-                self.financial_analyst = self._create_financial_analyst()
-                self.market_researcher = self._create_market_researcher()
-                self.investment_advisor = self._create_investment_advisor()
-                self.tft_interpreter = self._create_tft_interpreter()
-            except Exception as e:
-                logging.error(f"Error creating CrewAI agents: {str(e)}")
-                self.use_llm = False
+        # Always use fallback analysis to avoid CrewAI/SQLite issues
+        self.use_llm = False
+        
+        # Log that we're using fallback analysis
+        logging.info("Using fallback analysis method to avoid CrewAI/SQLite issues on Streamlit Cloud")
     
     def _validate_api_key(self):
         """
@@ -202,7 +191,7 @@ class TFTStockAnalysisLLM:
         )
     
     def analyze_stock(self, symbol, forecast_data, model_metrics, feature_importance):
-        """Analyze a stock using CrewAI agents.
+        """Analyze a stock using the fallback template-based method.
         
         Args:
             symbol (str): Stock symbol to analyze.
@@ -213,115 +202,8 @@ class TFTStockAnalysisLLM:
         Returns:
             str: Comprehensive stock analysis.
         """
-        if not self.use_llm:
-            return self._generate_fallback_analysis(symbol, forecast_data, "API key validation failed or CrewAI not available")
-        
-        try:
-            # Set API key explicitly for this session
-            os.environ["OPENAI_API_KEY"] = self.api_key
-            
-            # Import CrewAI here to avoid errors if not using LLM
-            from crewai import Crew, Process
-            
-            # Create the tasks
-            financial_analysis_task = self._create_financial_analysis_task(symbol, forecast_data, feature_importance)
-            market_research_task = self._create_market_research_task(symbol)
-            tft_interpretation_task = self._create_tft_interpretation_task(symbol, model_metrics, feature_importance)
-            
-            # Assign agents to tasks
-            financial_analysis_task.agent = self.financial_analyst
-            market_research_task.agent = self.market_researcher
-            tft_interpretation_task.agent = self.tft_interpreter
-            
-            # Create the initial crew for sequential tasks with memory disabled to avoid SQLite issues
-            initial_crew = Crew(
-                agents=[self.financial_analyst, self.market_researcher, self.tft_interpreter],
-                tasks=[financial_analysis_task, market_research_task, tft_interpretation_task],
-                verbose=True,
-                process=Process.sequential,
-                memory=False  # Disable memory to avoid SQLite/Chroma DB issues
-            )
-            
-            # Run the initial crew
-            result = initial_crew.kickoff()
-            logging.info(f"Initial crew result type: {type(result)}")
-            
-            # Handle different result formats from CrewAI
-            if isinstance(result, list) and len(result) > 0:
-                financial_analysis = result[0]
-                market_research = result[1] if len(result) > 1 else None
-                model_interpretation = result[2] if len(result) > 2 else None
-            else:
-                # If result is not a list, it might be a single output or a different format
-                financial_analysis = result
-                market_research = None
-                model_interpretation = None
-            
-            # Create the investment recommendation task
-            investment_recommendation_task = self._create_investment_recommendation_task(
-                symbol,
-                financial_analysis=financial_analysis,
-                market_research=market_research,
-                model_interpretation=model_interpretation
-            )
-            
-            # Assign the investment advisor to the task
-            investment_recommendation_task.agent = self.investment_advisor
-            
-            # Create the recommendation crew with memory disabled to avoid SQLite issues
-            recommendation_crew = Crew(
-                agents=[self.investment_advisor],
-                tasks=[investment_recommendation_task],
-                verbose=True,
-                memory=False  # Disable memory to avoid SQLite/Chroma DB issues
-            )
-            
-            # Run the recommendation crew
-            final_result = recommendation_crew.kickoff()
-            
-            # Debug information about the output types
-            logging.info(f"Financial analysis type: {type(financial_analysis)}")
-            logging.info(f"Market research type: {type(market_research)}")
-            logging.info(f"Model interpretation type: {type(model_interpretation)}")
-            logging.info(f"Final result type: {type(final_result)}")
-            
-            # Extract content from different output types
-            def extract_content(output):
-                if hasattr(output, 'raw_output'):
-                    return output.raw_output
-                elif hasattr(output, 'output'):
-                    return output.output
-                elif hasattr(output, 'result'):
-                    return output.result
-                elif isinstance(output, str):
-                    return output
-                else:
-                    return str(output)
-            
-            # Combine all analyses into a comprehensive report
-            comprehensive_analysis = f"""
-            # Comprehensive TFT Stock Analysis for {symbol}
-            
-            ## Financial Analysis
-            {extract_content(financial_analysis)}
-            
-            ## Market Research
-            {extract_content(market_research) if market_research else "No market research available."}
-            
-            ## TFT Model Interpretation
-            {extract_content(model_interpretation) if model_interpretation else "No model interpretation available."}
-            
-            ## Investment Recommendation
-            {extract_content(final_result)}
-            
-            *Analysis generated on {datetime.now().strftime("%Y-%m-%d %H:%M:%S")}*
-            """
-            
-            return comprehensive_analysis
-            
-        except Exception as e:
-            logging.error(f"Error during LLM call: {str(e)}")
-            return self._generate_fallback_analysis(symbol, forecast_data, f"Error during LLM call: {str(e)}")
+        # Always use the fallback analysis to avoid CrewAI/SQLite issues
+        return self._generate_fallback_analysis(symbol, forecast_data, "Using template-based analysis for Streamlit Cloud compatibility")
     
     def _generate_fallback_analysis(self, symbol, forecast_data, error_message):
         """

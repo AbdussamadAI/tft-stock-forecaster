@@ -6,7 +6,7 @@ plotly>=5.14.0
 scikit-learn>=1.0.0
 torch>=2.0.0
 python-dotenv>=1.0.0
-crewai==0.28.0
+# CrewAI removed to avoid SQLite compatibility issues on Streamlit Cloud
 openai>=1.0.0
 
 # Use CPU-only version of PyTorch to reduce deployment size
