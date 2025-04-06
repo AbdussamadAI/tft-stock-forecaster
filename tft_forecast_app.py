@@ -13,10 +13,25 @@ import pandas as pd
 import numpy as np
 import plotly.graph_objects as go
 from datetime import timedelta
-import torch
-import torch.nn as nn
-import torch.optim as optim
-from torch.utils.data import Dataset, DataLoader
+# Import PyTorch with error handling to avoid issues on Streamlit Cloud
+try:
+    import torch
+    import torch.nn as nn
+    import torch.optim as optim
+    from torch.utils.data import Dataset, DataLoader
+    # Avoid accessing torch._classes which causes errors on Streamlit Cloud
+    torch._classes = None  # Prevent access to problematic internal module
+except Exception as e:
+    import logging
+    logging.warning(f"PyTorch import issue: {str(e)}")
+    # Create dummy classes/modules if imports fail
+    class DummyModule:
+        def __init__(self, *args, **kwargs):
+            pass
+    torch = DummyModule()
+    nn = DummyModule()
+    optim = DummyModule()
+    Dataset, DataLoader = DummyModule, DummyModule
 import time
 from sklearn.preprocessing import StandardScaler
 # Try to import dotenv, but continue if it's not available
