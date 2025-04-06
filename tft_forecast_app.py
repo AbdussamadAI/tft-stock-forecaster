@@ -229,7 +229,8 @@ def add_technical_indicators(data):
     
     # Replace any remaining infinities or NaNs
     df = df.replace([np.inf, -np.inf], np.nan)
-    df = df.fillna(method='bfill').fillna(method='ffill')
+    # Update to use bfill() and ffill() instead of deprecated fillna(method='...')
+    df = df.bfill().ffill()
     
     # If still have NaNs (e.g., at the beginning of the series), replace with zeros
     df = df.fillna(0)

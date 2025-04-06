@@ -83,10 +83,12 @@ class TFTStockAnalysisLLM:
             role="Financial Analyst",
             goal="Analyze financial data and provide insights on stock performance",
             backstory="""You are a seasoned financial analyst with expertise in stock market analysis. 
-            You have a deep understanding of financial metrics, technical indicators, and market trends. 
-            Your analysis is data-driven, objective, and comprehensive.""",
+            You excel at interpreting financial statements, analyzing market trends, and providing 
+            insights on company performance. Your analysis is thorough, balanced, and focused on 
+            helping investors make informed decisions.""",
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
+            tools=[]  # Empty tools list to avoid SQLite/Chroma DB issues
         )
     
     def _create_market_researcher(self):
@@ -94,12 +96,14 @@ class TFTStockAnalysisLLM:
         from crewai import Agent
         return Agent(
             role="Market Researcher",
-            goal="Research market trends and news that could impact stock performance",
+            goal="Research market trends and news related to the stock",
             backstory="""You are an experienced market researcher with a keen eye for market trends 
-            and news that could impact stock performance. You analyze market sentiment, industry 
-            developments, and macroeconomic factors to provide context for stock movements.""",
+            and news that impact stock prices. You analyze news articles, social media sentiment, 
+            and industry reports to provide a comprehensive view of the market landscape. Your 
+            research helps investors understand the broader context affecting a stock.""",
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
+            tools=[]  # Empty tools list to avoid SQLite/Chroma DB issues
         )
     
     def _create_investment_advisor(self):
@@ -112,7 +116,8 @@ class TFTStockAnalysisLLM:
             investment advice. You analyze financial data and market trends to formulate investment 
             strategies. Your recommendations are balanced, considering both potential risks and rewards.""",
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
+            tools=[]  # Empty tools list to avoid SQLite/Chroma DB issues
         )
         
     def _create_tft_interpreter(self):
@@ -126,7 +131,8 @@ class TFTStockAnalysisLLM:
             explain feature importance, and provide insights on model performance. You translate 
             complex technical concepts into clear, actionable insights.""",
             verbose=True,
-            allow_delegation=False
+            allow_delegation=False,
+            tools=[]  # Empty tools list to avoid SQLite/Chroma DB issues
         )
     
     def _create_financial_analysis_task(self, symbol, forecast_data, feature_importance):
@@ -227,12 +233,13 @@ class TFTStockAnalysisLLM:
             market_research_task.agent = self.market_researcher
             tft_interpretation_task.agent = self.tft_interpreter
             
-            # Create the initial crew for sequential tasks
+            # Create the initial crew for sequential tasks with memory disabled to avoid SQLite issues
             initial_crew = Crew(
                 agents=[self.financial_analyst, self.market_researcher, self.tft_interpreter],
                 tasks=[financial_analysis_task, market_research_task, tft_interpretation_task],
                 verbose=True,
-                process=Process.sequential
+                process=Process.sequential,
+                memory=False  # Disable memory to avoid SQLite/Chroma DB issues
             )
             
             # Run the initial crew
@@ -261,11 +268,12 @@ class TFTStockAnalysisLLM:
             # Assign the investment advisor to the task
             investment_recommendation_task.agent = self.investment_advisor
             
-            # Create the recommendation crew
+            # Create the recommendation crew with memory disabled to avoid SQLite issues
             recommendation_crew = Crew(
                 agents=[self.investment_advisor],
                 tasks=[investment_recommendation_task],
-                verbose=True
+                verbose=True,
+                memory=False  # Disable memory to avoid SQLite/Chroma DB issues
             )
             
             # Run the recommendation crew
