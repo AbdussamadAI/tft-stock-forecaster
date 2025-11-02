@@ -154,6 +154,21 @@ market_options = {
 selected_market = st.sidebar.selectbox("Stock Market", list(market_options.keys()))
 market_suffix = market_options[selected_market]
 
+# Currency symbol based on market
+currency_symbols = {
+    "US (NYSE/NASDAQ)": "$",
+    "London (LSE)": "£",
+    "Pakistan (PSX)": "PKR "
+}
+currency_symbol = currency_symbols[selected_market]
+
+currency_names = {
+    "US (NYSE/NASDAQ)": "USD",
+    "London (LSE)": "GBP",
+    "Pakistan (PSX)": "PKR"
+}
+currency_name = currency_names[selected_market]
+
 # Stock symbol suggestions based on market
 if selected_market == "US (NYSE/NASDAQ)":
     stock_suggestions = ["AAPL", "MSFT", "GOOGL", "AMZN", "TSLA", "META", "NVDA"]
@@ -196,11 +211,17 @@ batch_size = 64  # Batch size
 learning_rate = 0.001  # Learning rate
 
 # Function to load stock data
-@st.cache_data(ttl=3600)  # Cache data for 1 hour
+@st.cache_data(ttl=7200)  # Cache data for 2 hours to reduce API calls
 def load_stock_data(ticker, period):
-    stock = yf.Ticker(ticker)
-    data = stock.history(period=period)
-    return data
+    """Load stock data with rate limit handling."""
+    try:
+        stock = yf.Ticker(ticker)
+        data = stock.history(period=period)
+        return data
+    except Exception as e:
+        if "Too Many Requests" in str(e) or "Rate limit" in str(e):
+            raise Exception("Yahoo Finance rate limit reached. Please wait 5-10 minutes before trying again.")
+        raise e
 
 # Function to create technical indicators
 def add_technical_indicators(data):
@@ -508,6 +529,10 @@ def main():
             # Display basic stock info
             st.markdown("<h2 class='sub-header'>Stock Information</h2>", unsafe_allow_html=True)
             
+            # Show the last data timestamp
+            last_data_date = data.index[-1]
+            st.info(f"📊 Last data point: {last_data_date.strftime('%Y-%m-%d %H:%M:%S %Z')} (Data cached for up to 2 hours)")
+            
             # Get current price and basic metrics
             latest_price = data['Close'].iloc[-1]
             price_change = data['Close'].iloc[-1] - data['Close'].iloc[-2]
@@ -517,7 +542,7 @@ def main():
             col1, col2, col3, col4 = st.columns(4)
             
             with col1:
-                st.metric("Current Price", f"${latest_price:.2f}", f"{price_change_pct:.2f}%")
+                st.metric("Current Price", f"{currency_symbol}{latest_price:.2f}", f"{price_change_pct:.2f}%")
             
             with col2:
                 vol = data['Volume'].iloc[-1]
@@ -527,12 +552,12 @@ def main():
             with col3:
                 high_52w = data['High'].rolling(window=252).max().iloc[-1]
                 pct_from_high = ((latest_price / high_52w) - 1) * 100
-                st.metric("52W High", f"${high_52w:.2f}", f"{pct_from_high:.2f}%")
+                st.metric("52W High", f"{currency_symbol}{high_52w:.2f}", f"{pct_from_high:.2f}%")
             
             with col4:
                 low_52w = data['Low'].rolling(window=252).min().iloc[-1]
                 pct_from_low = ((latest_price / low_52w) - 1) * 100
-                st.metric("52W Low", f"${low_52w:.2f}", f"{pct_from_low:.2f}%")
+                st.metric("52W Low", f"{currency_symbol}{low_52w:.2f}", f"{pct_from_low:.2f}%")
             
             # Display stock price chart
             st.markdown("<h2 class='sub-header'>Historical Price Chart</h2>", unsafe_allow_html=True)
@@ -553,7 +578,7 @@ def main():
             fig.update_layout(
                 title=f"{symbol} Stock Price",
                 xaxis_title="Date",
-                yaxis_title="Price (USD)",
+                yaxis_title=f"Price ({currency_name})",
                 xaxis_rangeslider_visible=False,
                 plot_bgcolor='white',
                 paper_bgcolor='white',

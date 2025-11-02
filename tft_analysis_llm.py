@@ -36,11 +36,19 @@ class TFTStockAnalysisLLM:
         # Set API key if provided, otherwise use environment variable
         self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
         
-        # Always use fallback analysis to avoid CrewAI/SQLite issues
-        self.use_llm = False
+        # Check if we can use OpenAI directly (without CrewAI)
+        self.use_llm = self._validate_api_key()
         
-        # Log that we're using fallback analysis
-        logging.info("Using fallback analysis method to avoid CrewAI/SQLite issues on Streamlit Cloud")
+        if self.use_llm:
+            try:
+                from openai import OpenAI
+                self.client = OpenAI(api_key=self.api_key)
+                logging.info("OpenAI client initialized successfully")
+            except Exception as e:
+                logging.warning(f"Failed to initialize OpenAI client: {e}")
+                self.use_llm = False
+        else:
+            logging.info("Using fallback analysis method - no valid API key")
     
     def _validate_api_key(self):
         """
@@ -191,7 +199,7 @@ class TFTStockAnalysisLLM:
         )
     
     def analyze_stock(self, symbol, forecast_data, model_metrics, feature_importance):
-        """Analyze a stock using the fallback template-based method.
+        """Analyze a stock using OpenAI API.
         
         Args:
             symbol (str): Stock symbol to analyze.
@@ -202,8 +210,78 @@ class TFTStockAnalysisLLM:
         Returns:
             str: Comprehensive stock analysis.
         """
-        # Always use the fallback analysis to avoid CrewAI/SQLite issues
-        return self._generate_fallback_analysis(symbol, forecast_data, "Using template-based analysis for Streamlit Cloud compatibility")
+        if not self.use_llm:
+            return self._generate_fallback_analysis(symbol, forecast_data, "No valid OpenAI API key available")
+        
+        try:
+            return self._generate_openai_analysis(symbol, forecast_data, model_metrics, feature_importance)
+        except Exception as e:
+            logging.error(f"Error generating OpenAI analysis: {e}")
+            return self._generate_fallback_analysis(symbol, forecast_data, f"OpenAI API error: {str(e)}")
+    
+    def _generate_openai_analysis(self, symbol, forecast_data, model_metrics, feature_importance):
+        """Generate analysis using OpenAI API directly.
+        
+        Args:
+            symbol (str): Stock symbol.
+            forecast_data (pd.DataFrame): Forecast data.
+            model_metrics (dict): Model performance metrics.
+            feature_importance (dict): Feature importance dictionary.
+            
+        Returns:
+            str: AI-generated analysis.
+        """
+        # Prepare the forecast summary
+        forecast_summary = ""
+        if forecast_data is not None and not forecast_data.empty:
+            forecast_summary = forecast_data.to_string()
+            last_day = forecast_data.iloc[-1]
+            first_day = forecast_data.iloc[0]
+            price_change = ((last_day['Close'] - first_day['Close']) / first_day['Close']) * 100
+            forecast_summary += f"\n\nOverall predicted change: {price_change:.2f}%"
+        
+        # Prepare feature importance summary
+        feature_summary = "\n".join([f"- {k}: {v}" for k, v in sorted(feature_importance.items(), key=lambda x: float(x[1]), reverse=True)[:10]])
+        
+        # Create the prompt
+        prompt = f"""You are a financial analyst expert. Analyze the stock {symbol} based on the following TFT (Temporal Fusion Transformer) model predictions and data:
+
+**Forecast Data:**
+{forecast_summary}
+
+**Model Performance Metrics:**
+- MSE: {model_metrics.get('MSE', 'N/A')}
+- MAE: {model_metrics.get('MAE', 'N/A')}
+- MAPE: {model_metrics.get('MAPE', 'N/A')}
+
+**Top 10 Most Important Features:**
+{feature_summary}
+
+Provide a comprehensive analysis covering:
+1. Interpretation of the forecast trend
+2. Model reliability based on the metrics
+3. Key features driving the prediction
+4. Investment recommendation (Buy/Hold/Sell)
+5. Risk factors to consider
+
+Format your response in markdown with clear sections."""
+        
+        try:
+            response = self.client.chat.completions.create(
+                model="gpt-4o-mini",
+                messages=[
+                    {"role": "system", "content": "You are a professional financial analyst with expertise in stock market analysis and machine learning models."},
+                    {"role": "user", "content": prompt}
+                ],
+                temperature=0.7,
+                max_tokens=2000
+            )
+            
+            return response.choices[0].message.content
+        
+        except Exception as e:
+            logging.error(f"OpenAI API call failed: {e}")
+            raise
     
     def _generate_fallback_analysis(self, symbol, forecast_data, error_message):
         """

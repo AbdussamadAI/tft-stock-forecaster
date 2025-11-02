@@ -25,7 +25,39 @@ See requirements.txt for the full list of dependencies.
 
 ## How to Run Locally
 
+### 1. Install Dependencies
 ```bash
 pip install -r requirements.txt
+```
+
+### 2. Set Up OpenAI API Key (Optional for AI Analysis)
+
+To enable AI-powered stock analysis, you need to configure your OpenAI API key:
+
+**Option A: Using .env file (Recommended for local development)**
+```bash
+# Create a .env file in the project root
+echo "OPENAI_API_KEY=your_api_key_here" > .env
+```
+
+**Option B: Using environment variable**
+```bash
+export OPENAI_API_KEY=your_api_key_here
+```
+
+**Option C: For Streamlit Cloud deployment**
+- Go to your app settings in Streamlit Cloud dashboard
+- Add `OPENAI_API_KEY` as a secret
+- Set the value to your OpenAI API key
+
+### 3. Run the Application
+```bash
 streamlit run tft_forecast_app.py
 ```
+
+### 4. Test OpenAI Integration (Optional)
+```bash
+python3 test_openai.py
+```
+
+**Note:** The app will work without an OpenAI API key, but the AI analysis feature will use a simplified template-based analysis instead.
