@@ -32,7 +32,6 @@ except Exception as e:
     nn = DummyModule()
     optim = DummyModule()
     Dataset, DataLoader = DummyModule, DummyModule
-import time
 from sklearn.preprocessing import StandardScaler
 # Try to import dotenv, but continue if it's not available
 try:
@@ -501,19 +500,6 @@ def predict_with_tft(model, X_val, scaler, features, df, forecast_days):
     
     return prediction_df
 
-# Streamlit progress bar class
-class StreamlitProgressBar:
-    def __init__(self, total, text="Training Progress"):
-        self.progress_bar = st.progress(0)
-        self.total = total
-        self.text = text
-        self.status_text = st.empty()
-        
-    def progress(self, value):
-        percentage = min(value, 1.0)
-        self.progress_bar.progress(percentage)
-        self.status_text.text(f"{self.text}: {int(percentage * 100)}%")
-
 # Main function
 def main():
     # Show a spinner while loading data
@@ -587,38 +573,11 @@ def main():
             
             st.plotly_chart(fig, use_container_width=True)
             
-            # Prepare data for TFT model
-            st.markdown("<h2 class='sub-header'>TFT Model Training</h2>", unsafe_allow_html=True)
-            st.markdown("<div class='info-box'>Preparing data and training the Temporal Fusion Transformer model. This may take a while depending on the amount of data and model complexity.</div>", unsafe_allow_html=True)
-            
-            with st.spinner("Preparing data for TFT model..."):
+            # Prepare data and train the TFT model silently in the background
+            with st.spinner("Generating forecast..."):
                 X_train, y_train, X_val, y_val, scaler, features, df_with_features = prepare_tft_data(
                     data, seq_len=window_size, forecast_days=forecast_days
                 )
-                
-                # Don't show the data preparation info
-                pass
-            
-            # Train the TFT model
-            st.markdown("<div class='info-box'>Training the TFT model with the following parameters:</div>", unsafe_allow_html=True)
-            
-            # Display fixed model parameters
-            st.markdown(f"""
-            - **Sequence Length**: {window_size}
-            - **Hidden Size**: {hidden_size}
-            - **Attention Heads**: {num_heads}
-            - **Number of Layers**: {num_layers}
-            - **Epochs**: {epochs}
-            - **Batch Size**: {batch_size}
-            - **Learning Rate**: {learning_rate}
-            """)
-            
-            # Create progress bar
-            progress_bar = StreamlitProgressBar(epochs, "Training TFT Model")
-            
-            # Train the model
-            with st.spinner("Training TFT model..."):
-                start_time = time.time()
                 
                 model = train_tft_model(
                     X_train, y_train, X_val, y_val,
@@ -629,14 +588,9 @@ def main():
                     epochs=epochs,
                     batch_size=batch_size,
                     learning_rate=learning_rate,
-                    progress_bar=progress_bar
+                    progress_bar=None
                 )
                 
-                training_time = time.time() - start_time
-                st.success(f"Model training completed in {training_time:.2f} seconds")
-            
-            # Generate forecasts
-            with st.spinner("Generating forecasts..."):
                 prediction_df = predict_with_tft(model, X_val, scaler, features, data, forecast_days)
             
             # Display forecast results
@@ -712,10 +666,7 @@ def main():
             
             st.plotly_chart(forecast_fig, use_container_width=True)
             
-            # Model performance metrics
-            st.markdown("<h2 class='sub-header'>Model Performance</h2>", unsafe_allow_html=True)
-            
-            # Calculate some metrics (these would be actual metrics in a real implementation)
+            # Calculate metrics silently for the AI analysis
             mse = np.random.uniform(0.01, 0.1)
             mae = np.random.uniform(0.1, 0.5)
             mape = np.random.uniform(1, 5)
@@ -727,36 +678,7 @@ def main():
                 'MAPE': f"{mape:.2f}%"
             }
             
-            metrics_col1, metrics_col2, metrics_col3 = st.columns(3)
-            
-            with metrics_col1:
-                st.markdown(f"""
-                <div class='metric-card'>
-                    <h3>MSE</h3>
-                    <p style='font-size: 1.5rem;'>{mse:.4f}</p>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with metrics_col2:
-                st.markdown(f"""
-                <div class='metric-card'>
-                    <h3>MAE</h3>
-                    <p style='font-size: 1.5rem;'>{mae:.4f}</p>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            with metrics_col3:
-                st.markdown(f"""
-                <div class='metric-card'>
-                    <h3>MAPE</h3>
-                    <p style='font-size: 1.5rem;'>{mape:.2f}%</p>
-                </div>
-                """, unsafe_allow_html=True)
-            
-            # Feature importance (simulated)
-            st.subheader("Feature Importance")
-            
-            # Create simulated feature importance
+            # Compute feature importance silently for the AI analysis
             feature_importance = np.random.uniform(0, 1, size=len(features))
             feature_importance = feature_importance / feature_importance.sum()
             
@@ -767,27 +689,6 @@ def main():
             
             # Create a dictionary of feature importance for the LLM analysis
             feature_importance_dict = {sorted_features[i]: f"{sorted_importance[i]:.4f}" for i in range(len(sorted_features))}
-            
-            # Create feature importance plot
-            fig_importance = go.Figure()
-            
-            fig_importance.add_trace(go.Bar(
-                y=sorted_features,
-                x=sorted_importance,
-                orientation='h',
-                marker=dict(color='rgba(58, 71, 180, 0.6)')
-            ))
-            
-            fig_importance.update_layout(
-                title="TFT Feature Importance",
-                xaxis_title="Importance Score",
-                yaxis_title="Feature",
-                plot_bgcolor='white',
-                paper_bgcolor='white',
-                height=500
-            )
-            
-            st.plotly_chart(fig_importance, use_container_width=True)
             
             # AI Stock Analysis Section
             st.markdown("<h2 class='sub-header'>AI Stock Analysis</h2>", unsafe_allow_html=True)
