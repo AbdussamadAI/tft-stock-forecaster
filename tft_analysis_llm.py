@@ -2,7 +2,7 @@
 TFT Stock Analysis LLM Module
 
 This module provides LLM-powered analysis for the TFT stock forecasting app.
-It uses CrewAI to simulate a team of financial experts analyzing stock data.
+It uses the DeepSeek API (OpenAI-compatible) to analyze stock data.
 """
 
 import os
@@ -22,7 +22,7 @@ logging.basicConfig(level=logging.INFO, format='%(asctime)s - %(levelname)s - %(
 
 class TFTStockAnalysisLLM:
     """
-    A class that uses CrewAI to perform stock analysis with multiple specialized agents.
+    A class that uses the DeepSeek API to perform AI-powered stock analysis.
     Specifically designed for the TFT forecasting app.
     """
     
@@ -31,34 +31,37 @@ class TFTStockAnalysisLLM:
         Initialize the TFTStockAnalysisLLM with an optional API key.
         
         Args:
-            api_key (str, optional): OpenAI API key. If None, will try to use environment variable.
+            api_key (str, optional): DeepSeek API key. If None, will try to use environment variable.
         """
         # Set API key if provided, otherwise use environment variable
-        self.api_key = api_key or os.environ.get("OPENAI_API_KEY")
+        self.api_key = api_key or os.environ.get("DEEPSEEK_API_KEY")
         
-        # Check if we can use OpenAI directly (without CrewAI)
+        # Check if we can use the DeepSeek API
         self.use_llm = self._validate_api_key()
         
         if self.use_llm:
             try:
                 from openai import OpenAI
-                self.client = OpenAI(api_key=self.api_key)
-                logging.info("OpenAI client initialized successfully")
+                self.client = OpenAI(
+                    api_key=self.api_key,
+                    base_url=os.environ.get("DEEPSEEK_BASE_URL", "https://api.deepseek.com")
+                )
+                logging.info("DeepSeek client initialized successfully")
             except Exception as e:
-                logging.warning(f"Failed to initialize OpenAI client: {e}")
+                logging.warning(f"Failed to initialize DeepSeek client: {e}")
                 self.use_llm = False
         else:
-            logging.info("Using fallback analysis method - no valid API key")
+            logging.info("Using fallback analysis method - no valid DeepSeek API key")
     
     def _validate_api_key(self):
         """
-        Validate the OpenAI API key.
+        Validate the DeepSeek API key.
         
         Returns:
             bool: True if the API key is valid, False otherwise.
         """
         if not self.api_key:
-            logging.warning("No OpenAI API key provided. Set OPENAI_API_KEY in Streamlit Cloud settings.")
+            logging.warning("No DeepSeek API key provided. Set DEEPSEEK_API_KEY in your .env file or environment.")
             return False
         
         # For Streamlit Cloud, we'll be more lenient with validation
@@ -73,133 +76,8 @@ class TFTStockAnalysisLLM:
         logging.info(f"Using API key: {masked_key}")
         return True
     
-    def _create_financial_analyst(self):
-        """Create a financial analyst agent specialized in analyzing stock data."""
-        from crewai import Agent
-        return Agent(
-            role="Financial Analyst",
-            goal="Analyze financial data and provide insights on stock performance",
-            backstory="""You are a seasoned financial analyst with expertise in stock market analysis. 
-            You excel at interpreting financial statements, analyzing market trends, and providing 
-            insights on company performance. Your analysis is thorough, balanced, and focused on 
-            helping investors make informed decisions.""",
-            verbose=True,
-            allow_delegation=False,
-            tools=[]  # Empty tools list to avoid SQLite/Chroma DB issues
-        )
-    
-    def _create_market_researcher(self):
-        """Create a market researcher agent specialized in analyzing market trends."""
-        from crewai import Agent
-        return Agent(
-            role="Market Researcher",
-            goal="Research market trends and news related to the stock",
-            backstory="""You are an experienced market researcher with a keen eye for market trends 
-            and news that impact stock prices. You analyze news articles, social media sentiment, 
-            and industry reports to provide a comprehensive view of the market landscape. Your 
-            research helps investors understand the broader context affecting a stock.""",
-            verbose=True,
-            allow_delegation=False,
-            tools=[]  # Empty tools list to avoid SQLite/Chroma DB issues
-        )
-    
-    def _create_investment_advisor(self):
-        """Create an investment advisor agent specialized in providing recommendations."""
-        from crewai import Agent
-        return Agent(
-            role="Investment Advisor",
-            goal="Provide investment recommendations based on financial analysis and market research",
-            backstory="""You are a seasoned investment advisor with a track record of providing sound 
-            investment advice. You analyze financial data and market trends to formulate investment 
-            strategies. Your recommendations are balanced, considering both potential risks and rewards.""",
-            verbose=True,
-            allow_delegation=False,
-            tools=[]  # Empty tools list to avoid SQLite/Chroma DB issues
-        )
-        
-    def _create_tft_interpreter(self):
-        """Create a TFT model interpreter specialized in explaining model predictions."""
-        from crewai import Agent
-        return Agent(
-            role="TFT Model Interpreter",
-            goal="Interpret and explain the TFT model predictions and feature importance",
-            backstory="""You are an expert in time series forecasting and deep learning models, 
-            particularly Temporal Fusion Transformers. You can interpret model predictions, 
-            explain feature importance, and provide insights on model performance. You translate 
-            complex technical concepts into clear, actionable insights.""",
-            verbose=True,
-            allow_delegation=False,
-            tools=[]  # Empty tools list to avoid SQLite/Chroma DB issues
-        )
-    
-    def _create_financial_analysis_task(self, symbol, forecast_data, feature_importance):
-        """Create a task for financial analysis."""
-        from crewai import Task
-        return Task(
-            description=f"""Analyze the financial performance of {symbol} based on historical data and TFT model forecasts.
-            Focus on key financial metrics, price trends, and the forecast data provided.
-            Explain what the feature importance values mean for this stock.
-            Your analysis should be data-driven and objective.
-            Format your response in markdown.
-            """,
-            expected_output="A comprehensive financial analysis of the stock in markdown format.",
-            agent=self.financial_analyst
-        )
-    
-    def _create_market_research_task(self, symbol):
-        """Create a task for market research."""
-        from crewai import Task
-        return Task(
-            description=f"""Research market trends and news that could impact {symbol}'s performance.
-            Consider industry developments, market sentiment, and macroeconomic factors.
-            Look for recent news, analyst opinions, and market trends related to {symbol}.
-            Your research should provide context for the stock's movements and future potential.
-            Format your response in markdown.
-            """,
-            expected_output="A thorough market research report on the stock in markdown format.",
-            agent=self.market_researcher
-        )
-    
-    def _create_tft_interpretation_task(self, symbol, model_metrics, feature_importance):
-        """Create a task for TFT model interpretation."""
-        from crewai import Task
-        return Task(
-            description=f"""Interpret the TFT model predictions and feature importance for {symbol}.
-            Explain what the model metrics mean in terms of prediction reliability.
-            Analyze which features are most important for the prediction and why.
-            Make the technical aspects of the model understandable to a non-technical audience.
-            Format your response in markdown.
-            """,
-            expected_output="A clear interpretation of the TFT model predictions and feature importance in markdown format.",
-            agent=self.tft_interpreter
-        )
-    
-    def _create_investment_recommendation_task(self, symbol, financial_analysis=None, market_research=None, model_interpretation=None):
-        """Create a task for investment recommendation."""
-        from crewai import Task
-        context = ""
-        if financial_analysis:
-            context += f"\nFinancial Analysis:\n{financial_analysis}\n"
-        if market_research:
-            context += f"\nMarket Research:\n{market_research}\n"
-        if model_interpretation:
-            context += f"\nModel Interpretation:\n{model_interpretation}\n"
-        
-        return Task(
-            description=f"""Based on the provided analyses, create an investment recommendation for {symbol}.
-            Consider the financial analysis, market research, and model interpretation.
-            Provide a clear buy, hold, or sell recommendation with supporting rationale.
-            Include potential risks and alternative viewpoints.
-            Format your response in markdown.
-            
-            Context:\n{context}
-            """,
-            expected_output="A balanced investment recommendation with clear buy/hold/sell guidance in markdown format.",
-            agent=self.investment_advisor
-        )
-    
     def analyze_stock(self, symbol, forecast_data, model_metrics, feature_importance):
-        """Analyze a stock using OpenAI API.
+        """Analyze a stock using the DeepSeek API.
         
         Args:
             symbol (str): Stock symbol to analyze.
@@ -211,16 +89,16 @@ class TFTStockAnalysisLLM:
             str: Comprehensive stock analysis.
         """
         if not self.use_llm:
-            return self._generate_fallback_analysis(symbol, forecast_data, "No valid OpenAI API key available")
+            return self._generate_fallback_analysis(symbol, forecast_data, "No valid DeepSeek API key available")
         
         try:
-            return self._generate_openai_analysis(symbol, forecast_data, model_metrics, feature_importance)
+            return self._generate_deepseek_analysis(symbol, forecast_data, model_metrics, feature_importance)
         except Exception as e:
-            logging.error(f"Error generating OpenAI analysis: {e}")
-            return self._generate_fallback_analysis(symbol, forecast_data, f"OpenAI API error: {str(e)}")
+            logging.error(f"Error generating DeepSeek analysis: {e}")
+            return self._generate_fallback_analysis(symbol, forecast_data, f"DeepSeek API error: {str(e)}")
     
-    def _generate_openai_analysis(self, symbol, forecast_data, model_metrics, feature_importance):
-        """Generate analysis using OpenAI API directly.
+    def _generate_deepseek_analysis(self, symbol, forecast_data, model_metrics, feature_importance):
+        """Generate analysis using the DeepSeek API directly.
         
         Args:
             symbol (str): Stock symbol.
@@ -267,8 +145,9 @@ Provide a comprehensive analysis covering:
 Format your response in markdown with clear sections."""
         
         try:
+            model = os.environ.get("DEEPSEEK_MODEL", "deepseek-chat")
             response = self.client.chat.completions.create(
-                model="gpt-4o-mini",
+                model=model,
                 messages=[
                     {"role": "system", "content": "You are a professional financial analyst with expertise in stock market analysis and machine learning models."},
                     {"role": "user", "content": prompt}
@@ -280,7 +159,7 @@ Format your response in markdown with clear sections."""
             return response.choices[0].message.content
         
         except Exception as e:
-            logging.error(f"OpenAI API call failed: {e}")
+            logging.error(f"DeepSeek API call failed: {e}")
             raise
     
     def _generate_fallback_analysis(self, symbol, forecast_data, error_message):

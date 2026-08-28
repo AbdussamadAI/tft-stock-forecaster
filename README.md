@@ -30,34 +30,34 @@ See requirements.txt for the full list of dependencies.
 pip install -r requirements.txt
 ```
 
-### 2. Set Up OpenAI API Key (Optional for AI Analysis)
+### 2. Set Up DeepSeek API Key (Optional for AI Analysis)
 
-To enable AI-powered stock analysis, you need to configure your OpenAI API key:
+To enable AI-powered stock analysis, you need to configure your DeepSeek API key:
 
 **Option A: Using .env file (Recommended for local development)**
 ```bash
 # Create a .env file in the project root
-echo "OPENAI_API_KEY=your_api_key_here" > .env
+echo "DEEPSEEK_API_KEY=your_api_key_here" > .env
 ```
 
 **Option B: Using environment variable**
 ```bash
-export OPENAI_API_KEY=your_api_key_here
+export DEEPSEEK_API_KEY=your_api_key_here
 ```
 
 **Option C: For Streamlit Cloud deployment**
 - Go to your app settings in Streamlit Cloud dashboard
-- Add `OPENAI_API_KEY` as a secret
-- Set the value to your OpenAI API key
+- Add `DEEPSEEK_API_KEY` as a secret
+- Set the value to your DeepSeek API key
 
 ### 3. Run the Application
 ```bash
 streamlit run tft_forecast_app.py
 ```
 
-### 4. Test OpenAI Integration (Optional)
+### 4. Test DeepSeek Integration (Optional)
 ```bash
-python3 test_openai.py
+python3 test_deepseek.py
 ```
 
-**Note:** The app will work without an OpenAI API key, but the AI analysis feature will use a simplified template-based analysis instead.
+**Note:** The app will work without a DeepSeek API key, but the AI analysis feature will use a simplified template-based analysis instead.

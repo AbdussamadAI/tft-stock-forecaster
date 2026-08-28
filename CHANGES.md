@@ -1,5 +1,35 @@
 # Changes Made to Enable OpenAI API Integration
 
+## Date: August 28, 2026
+
+## Summary
+Switched AI analysis from OpenAI to the DeepSeek API. The app now reads `DEEPSEEK_API_KEY` from the `.env` file and uses DeepSeek's `deepseek-chat` model (via the OpenAI-compatible SDK) for AI-powered stock analysis.
+
+## Files Modified
+
+### 1. `tft_analysis_llm.py`
+- Reads `DEEPSEEK_API_KEY` instead of `OPENAI_API_KEY`
+- Initializes the OpenAI SDK client with `base_url="https://api.deepseek.com"`
+- Default model changed from `gpt-4o-mini` to `deepseek-chat`
+- Added optional `DEEPSEEK_BASE_URL` and `DEEPSEEK_MODEL` env var overrides
+- Updated log messages and fallback messages from OpenAI to DeepSeek
+
+### 2. `.env.example` / `.env`
+- `OPENAI_API_KEY=...` replaced with `DEEPSEEK_API_KEY=...`
+
+### 3. `test_openai.py` → `test_deepseek.py`
+- Renamed and updated to test the DeepSeek API configuration
+
+### 4. `tft_forecast_app.py`
+- Updated UI help text and warnings to reference DeepSeek instead of OpenAI
+
+### 5. Documentation
+- README.md, QUICKSTART.md, SETUP_GUIDE.md, and WARP.md updated for DeepSeek setup
+
+---
+
+# Changes Made to Enable OpenAI API Integration
+
 ## Date: November 2, 2025
 
 ## Summary

@@ -1,12 +1,12 @@
-# Setup Guide for TFT Stock Forecaster with OpenAI Integration
+# Setup Guide for TFT Stock Forecaster with DeepSeek Integration
 
 ## Overview
-This guide will help you set up the TFT Stock Forecaster app with OpenAI API integration for AI-powered stock analysis.
+This guide will help you set up the TFT Stock Forecaster app with DeepSeek API integration for AI-powered stock analysis.
 
 ## Prerequisites
 - Python 3.8 or higher
 - pip package manager
-- OpenAI API key (get one at https://platform.openai.com/api-keys)
+- DeepSeek API key (get one at https://platform.deepseek.com/api_keys)
 
 ## Step-by-Step Setup
 
@@ -26,15 +26,15 @@ This will install:
 - scikit-learn
 - torch (PyTorch)
 - python-dotenv
-- openai
+- openai (DeepSeek's API is OpenAI-compatible, so we use the OpenAI SDK)
 
-### 3. Configure OpenAI API Key
+### 3. Configure DeepSeek API Key
 
 #### Method 1: Using .env File (Recommended for Local)
 1. Create a file named `.env` in the project root directory
-2. Add your OpenAI API key:
+2. Add your DeepSeek API key:
 ```
-OPENAI_API_KEY=sk-your-actual-api-key-here
+DEEPSEEK_API_KEY=sk-your-actual-api-key-here
 ```
 3. Save the file
 
@@ -43,27 +43,27 @@ OPENAI_API_KEY=sk-your-actual-api-key-here
 #### Method 2: Using Environment Variables
 ```bash
 # For macOS/Linux
-export OPENAI_API_KEY=sk-your-actual-api-key-here
+export DEEPSEEK_API_KEY=sk-your-actual-api-key-here
 
 # For Windows (Command Prompt)
-set OPENAI_API_KEY=sk-your-actual-api-key-here
+set DEEPSEEK_API_KEY=sk-your-actual-api-key-here
 
 # For Windows (PowerShell)
-$env:OPENAI_API_KEY="sk-your-actual-api-key-here"
+$env:DEEPSEEK_API_KEY="sk-your-actual-api-key-here"
 ```
 
 ### 4. Verify Your Setup
 Run the test script to ensure everything is configured correctly:
 ```bash
-python3 test_openai.py
+python3 test_deepseek.py
 ```
 
 You should see:
 ```
 ✓ API key loaded from .env file
-✓ OpenAI client initialized successfully
+✓ DeepSeek client initialized successfully
 ✓ API call successful!
-✓ All tests passed! Your OpenAI API key is configured correctly.
+✓ All tests passed! Your DeepSeek API key is configured correctly.
 ```
 
 ### 5. Run the Application
@@ -96,22 +96,22 @@ The app will open in your default web browser at `http://localhost:8501`
 
 ## Troubleshooting
 
-### Issue: "No valid OpenAI API key available"
-**Solution:** 
+### Issue: "No valid DeepSeek API key available"
+**Solution:**
 - Verify your `.env` file exists and contains the correct API key
 - Check that the key starts with `sk-`
-- Run `python3 test_openai.py` to diagnose the issue
+- Run `python3 test_deepseek.py` to diagnose the issue
 
-### Issue: "OpenAI API error: Incorrect API key provided"
+### Issue: "DeepSeek API error: Incorrect API key provided"
 **Solution:**
 - Your API key is invalid or expired
-- Generate a new key at https://platform.openai.com/api-keys
+- Generate a new key at https://platform.deepseek.com/api_keys
 - Update your `.env` file with the new key
 
-### Issue: "OpenAI API error: You exceeded your current quota"
+### Issue: "DeepSeek API error: You exceeded your current quota"
 **Solution:**
-- You've used up your OpenAI API credits
-- Add payment method or credits at https://platform.openai.com/account/billing
+- You've used up your DeepSeek API credits
+- Top up your balance at https://platform.deepseek.com/top_up
 - The app will still work, but AI analysis will use fallback template
 
 ### Issue: Module import errors
@@ -127,28 +127,28 @@ pip install --upgrade -r requirements.txt
 3. Connect your GitHub repository
 4. In the app settings, add your secrets:
    - Click "Advanced settings"
-   - Add `OPENAI_API_KEY = "your-key-here"` to the secrets section
+   - Add `DEEPSEEK_API_KEY = "your-key-here"` to the secrets section
 5. Deploy!
 
 ## Cost Considerations
 
-The AI analysis feature uses OpenAI's `gpt-4o-mini` model, which is cost-effective:
-- Approximate cost: $0.001-0.002 per analysis
-- A $5 credit can generate thousands of analyses
+The AI analysis feature uses DeepSeek's `deepseek-chat` model, which is very cost-effective:
+- Approximate cost: a fraction of a cent per analysis
+- A small credit balance can generate thousands of analyses
 
-If you don't want to use OpenAI, the app will automatically fall back to template-based analysis.
+If you don't want to use DeepSeek, the app will automatically fall back to template-based analysis.
 
 ## Support
 
 For issues or questions:
 1. Check this guide first
-2. Run `python3 test_openai.py` to diagnose API issues
+2. Run `python3 test_deepseek.py` to diagnose API issues
 3. Check the terminal/console for error messages
 4. Review the Streamlit app logs
 
 ## Security Notes
 
 - Never commit your `.env` file to git
-- Never share your OpenAI API key publicly
+- Never share your DeepSeek API key publicly
 - Rotate your API key if it's been exposed
-- Monitor your OpenAI usage at https://platform.openai.com/usage
+- Monitor your DeepSeek usage at https://platform.deepseek.com/usage

@@ -4,22 +4,25 @@
 
 ### 1. Install Dependencies (30 seconds)
 ```bash
-cd /Users/abdulsamad/Downloads/PhD-project/tft-stock-forecaster
+cd /Users/abdulsamad/Desktop/MS-deployment/tft-stock-forecaster
 pip install -r requirements.txt
 ```
 
 ### 2. Set Up API Key (30 seconds)
-Your API key is already configured in `.env` file! ✅
+Add your DeepSeek API key to the `.env` file:
+```
+DEEPSEEK_API_KEY=your_deepseek_api_key_here
+```
 
 To verify it works:
 ```bash
-python3 test_openai.py
+python3 test_deepseek.py
 ```
 
 Expected output:
 ```
 ✓ API key loaded from .env file
-✓ OpenAI client initialized successfully
+✓ DeepSeek client initialized successfully
 ✓ API call successful!
 ✓ All tests passed!
 ```
@@ -47,7 +50,7 @@ Your browser will open automatically at `http://localhost:8501`
 - Technical indicators ✅
 - Template analysis ⚠️
 
-### With API Key (YOU HAVE THIS!):
+### With API Key:
 - Stock price charts ✅
 - TFT forecasts ✅
 - Technical indicators ✅
@@ -67,7 +70,7 @@ streamlit run tft_forecast_app.py
 
 ### API not working?
 ```bash
-python3 test_openai.py
+python3 test_deepseek.py
 ```
 
 ### Need help?
@@ -75,9 +78,9 @@ Check `SETUP_GUIDE.md` for detailed instructions.
 
 ## Cost
 
-Each AI analysis costs ~$0.001 (less than a tenth of a cent!)
-- Your $5 credit = ~6,600 analyses
-- That's enough for months of use!
+DeepSeek's `deepseek-chat` model is very cost-effective:
+- Each AI analysis costs a fraction of a cent
+- DeepSeek's pricing is among the most affordable for this type of analysis
 
 ## What's Next?
 

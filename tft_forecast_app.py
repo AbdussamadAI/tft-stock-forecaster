@@ -802,7 +802,7 @@ def main():
                     <li><strong>TFT Model Interpreter:</strong> Explains the model's predictions and feature importance</li>
                     <li><strong>Investment Advisor:</strong> Provides recommendations based on all analyses</li>
                 </ul>
-                <p><em>Note: This requires an OpenAI API key to be set in your environment variables.</em></p>
+                <p><em>Note: This requires a DeepSeek API key to be set in your environment variables.</em></p>
             </div>
             """, unsafe_allow_html=True)
             
@@ -811,7 +811,13 @@ def main():
                 with st.spinner("Generating AI analysis... This may take a minute..."):
                     try:
                         # Initialize the LLM analyzer
-                        llm_analyzer = TFTStockAnalysisLLM()
+                        # On Streamlit Cloud, the API key is stored in secrets
+                        # (not exposed as an environment variable).
+                        try:
+                            deepseek_api_key = st.secrets["DEEPSEEK_API_KEY"]
+                        except Exception:
+                            deepseek_api_key = None
+                        llm_analyzer = TFTStockAnalysisLLM(api_key=deepseek_api_key)
                         
                         # Generate the analysis
                         analysis = llm_analyzer.analyze_stock(
@@ -831,19 +837,19 @@ def main():
                         st.error(f"Error generating AI analysis: {error_msg}")
                         
                         # Provide more helpful guidance based on the error
-                        if "API key" in error_msg or "CrewAI not available" in error_msg:
+                        if "API key" in error_msg:
                             st.warning("""
-                            ### OpenAI API Key Required
+                            ### DeepSeek API Key Required
                             
-                            To use the AI analysis feature, you need to set up an OpenAI API key:
+                            To use the AI analysis feature, you need to set up a DeepSeek API key:
                             
                             **For local deployment:**
-                            1. Create a `.env` file in the project root with `OPENAI_API_KEY=your_key_here`
+                            1. Create a `.env` file in the project root with `DEEPSEEK_API_KEY=your_key_here`
                             2. Restart the app
                             
                             **For Streamlit Cloud:**
                             1. Go to your app settings in the Streamlit Cloud dashboard
-                            2. Add `OPENAI_API_KEY` as a secret with your API key as the value
+                            2. Add `DEEPSEEK_API_KEY` as a secret with your API key as the value
                             3. Redeploy the app
                             
                             You can still use the forecasting features without an API key.

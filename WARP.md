@@ -4,7 +4,7 @@ This file provides guidance to WARP (warp.dev) when working with code in this re
 
 ## Project Overview
 
-TFT Stock Forecasting Tool - A Streamlit application that uses a simplified Temporal Fusion Transformer (TFT) model for stock market forecasting with AI-powered analysis using OpenAI.
+TFT Stock Forecasting Tool - A Streamlit application that uses a simplified Temporal Fusion Transformer (TFT) model for stock market forecasting with AI-powered analysis using DeepSeek.
 
 ## Common Commands
 
@@ -13,8 +13,8 @@ TFT Stock Forecasting Tool - A Streamlit application that uses a simplified Temp
 # Run the application locally
 streamlit run tft_forecast_app.py
 
-# Test OpenAI API integration
-python3 test_openai.py
+# Test DeepSeek API integration
+python3 test_deepseek.py
 
 # Install dependencies
 pip install -r requirements.txt
@@ -23,10 +23,10 @@ pip install -r requirements.txt
 ### Environment Setup
 ```bash
 # Create and configure .env file for local development
-echo "OPENAI_API_KEY=your_api_key_here" > .env
+echo "DEEPSEEK_API_KEY=your_api_key_here" > .env
 
 # Export environment variable (alternative to .env)
-export OPENAI_API_KEY=your_api_key_here
+export DEEPSEEK_API_KEY=your_api_key_here
 ```
 
 ## Architecture
@@ -42,8 +42,8 @@ export OPENAI_API_KEY=your_api_key_here
 - Prediction generation with synthetic OHLC forecast based on model output
 
 **tft_analysis_llm.py** (AI analysis module)
-- `TFTStockAnalysisLLM` class that interfaces with OpenAI API
-- Uses GPT-4o-mini for cost-effective stock analysis
+- `TFTStockAnalysisLLM` class that interfaces with the DeepSeek API via the OpenAI SDK
+- Uses the `deepseek-chat` model for cost-effective stock analysis
 - Fallback mechanism: if API key is missing/invalid, generates template-based analysis instead
 - Analyzes forecast data, model metrics, and feature importance to provide investment recommendations
 
@@ -65,7 +65,7 @@ export OPENAI_API_KEY=your_api_key_here
 6. **Prediction**: 
    - Uses last validation sequence
    - Generates forecast with randomized OHLC values based on predicted trend direction
-7. **AI Analysis** (optional): OpenAI analyzes forecast + metrics + feature importance → investment recommendation
+7. **AI Analysis** (optional): DeepSeek analyzes forecast + metrics + feature importance → investment recommendation
 
 ### Key Design Patterns
 
@@ -77,7 +77,7 @@ export OPENAI_API_KEY=your_api_key_here
 - API key validation with masked logging
 
 **Fallback Mechanisms**:
-- If OpenAI API fails → template-based analysis
+- If DeepSeek API fails → template-based analysis
 - If data is insufficient → reduced sequence length
 - If validation set can't be created → clones training data
 
@@ -114,24 +114,32 @@ The model outputs shape `[batch_size, 4]` but targets are `[batch_size, forecast
 
 ## Environment Variables
 
-**OPENAI_API_KEY** (optional):
+**DEEPSEEK_API_KEY** (optional):
 - Required for AI-powered analysis feature
 - Store in `.env` file for local development (already in .gitignore)
 - Use Streamlit Cloud secrets for deployment
 - App works without it (falls back to template analysis)
+
+**DEEPSEEK_BASE_URL** (optional):
+- Defaults to `https://api.deepseek.com`
+- Override only if DeepSeek changes their endpoint or you use a compatible proxy
+
+**DEEPSEEK_MODEL** (optional):
+- Defaults to `deepseek-chat`
+- Can be set to `deepseek-reasoner` if reasoning output is desired
 
 ## Deployment
 
 ### Streamlit Cloud
 - Uses Procfile: `web: sh setup.sh && streamlit run tft_forecast_app.py`
 - setup.sh creates Streamlit config at runtime
-- Add OPENAI_API_KEY to Streamlit Cloud app secrets
+- Add DEEPSEEK_API_KEY to Streamlit Cloud app secrets
 - Dependencies: requirements.txt (CPU-only PyTorch recommended)
 
 ### Local Development
 1. Install requirements: `pip install -r requirements.txt`
-2. Configure API key: create `.env` with OPENAI_API_KEY
-3. Verify setup: `python3 test_openai.py`
+2. Configure API key: create `.env` with DEEPSEEK_API_KEY
+3. Verify setup: `python3 test_deepseek.py`
 4. Run: `streamlit run tft_forecast_app.py`
 
 ## Code Modification Guidelines
@@ -146,8 +154,9 @@ The model outputs shape `[batch_size, 4]` but targets are `[batch_size, forecast
 ### When Editing tft_analysis_llm.py
 - Always provide fallback analysis path
 - Mask API keys in logs: `f"{key[:3]}...{key[-3:]}"`
-- Keep model parameter as `gpt-4o-mini` (cost-effective)
-- Handle OpenAI API exceptions gracefully
+- Keep default model as `deepseek-chat` (cost-effective)
+- Use `DEEPSEEK_BASE_URL` and `DEEPSEEK_MODEL` env vars for configuration
+- Handle DeepSeek API exceptions gracefully
 
 ### Adding New Technical Indicators
 1. Add calculation in `add_technical_indicators()`
@@ -166,7 +175,7 @@ The model outputs shape `[batch_size, 4]` but targets are `[batch_size, forecast
 
 **API Testing**:
 ```bash
-python3 test_openai.py
+python3 test_deepseek.py
 ```
 Expected output: ✓ all tests passed
 
@@ -175,8 +184,8 @@ Expected output: ✓ all tests passed
 ```
 .
 ├── tft_forecast_app.py          # Main Streamlit application
-├── tft_analysis_llm.py          # OpenAI analysis module
-├── test_openai.py               # API key verification script
+├── tft_analysis_llm.py          # DeepSeek analysis module
+├── test_deepseek.py             # API key verification script
 ├── requirements.txt             # Python dependencies
 ├── .env.example                 # Template for environment variables
 ├── .streamlit/
